@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <title>TESDA Forms Library</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172033;
+      background: #f3f6fb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 56px 24px 44px;
+      color: #fff;
+      background: linear-gradient(135deg, #123b70, #176b87);
+    }
+
+    .header-content,
+    main {
+      width: min(100%, 1080px);
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #b8e4f0;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      letter-spacing: -0.04em;
+    }
+
+    header p:last-child {
+      max-width: 620px;
+      margin: 14px 0 0;
+      color: #e0f2f7;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    main {
+      padding: 36px 24px 56px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .count {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .folder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+      gap: 16px;
+    }
+
+    .folder-card {
+      display: flex;
+      min-height: 152px;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px;
+      border: 1px solid #e1e8f0;
+      border-radius: 14px;
+      background: #fff;
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 3px 12px rgb(15 23 42 / 4%);
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .folder-card:hover {
+      transform: translateY(-3px);
+      border-color: #72b9cb;
+      box-shadow: 0 10px 24px rgb(15 23 42 / 10%);
+    }
+
+    .folder-card:focus-visible {
+      outline: 3px solid #1683a1;
+      outline-offset: 3px;
+    }
+
+    .folder-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      margin-bottom: 16px;
+      place-items: center;
+      border-radius: 11px;
+      background: #e9f5f8;
+      font-size: 1.25rem;
+    }
+
+    .folder-name {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .folder-action {
+      margin-top: 8px;
+      color: #557087;
+      font-size: 0.88rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <p class="eyebrow">Document library</p>
+      <h1>TESDA Forms</h1>
+      <p>Choose a folder below to open its forms.</p>
+    </div>
+  </header>
+  <main>
+    <div class="section-heading">
+      <h2>Choose a folder</h2>
+      <span class="count">8 folders</span>
+    </div>
+    <nav class="folder-grid" aria-label="TESDA form folders">
+      <a class="folder-card" href="tesda-2d-game-art-nc3-forms/tesda-2d-game-art-nc3-forms.html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">2D Game Art NC III</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+      <a class="folder-card" href="tesda-animation-nc2-forms/tesda-animation-nc2-forms.html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">Animation NC II</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+      <a class="folder-card" href="tesda-cac-nc3-forms/tesda-cac-nc3-forms.html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">CAC NC III</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+      <a class="folder-card" href="tesda-css-nc2-forms%20(2)/tesda-css-nc2-forms%20(2).html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">CSS NC II</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+      <a class="folder-card" href="tesda-electronics-backend-nc2-forms/tesda-electronics-backend-nc2-forms.html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">Electronics Backend NC II</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+      <a class="folder-card" href="tesda-game-programming-nc3-forms/tesda-game-programming-nc3-forms.html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">Game Programming NC III</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+      <a class="folder-card" href="tesda-masonry-nc2-forms/tesda-masonry-nc2-forms.html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">Masonry NC II</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+      <a class="folder-card" href="tesda-vgd-nc3-forms/tesda-vgd-nc3-forms.html">
+        <span class="folder-icon" aria-hidden="true">📁</span>
+        <span class="folder-name">Visual Graphic Design NC III</span>
+        <span class="folder-action">Open forms →</span>
+      </a>
+    </nav>
+  </main>
+</body>
+</html>
