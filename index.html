@@ -240,25 +240,107 @@
     </main>
   </div>
 
-  <!-- Supabase JS Client & Auth Logic -->
+    <!-- Sync CDN load to guarantee window.supabase exists -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <h2>Restricted Access</h2>
+      <p style="font-size: 0.9rem; color: #64748b;">Enter your invite code to open the TESDA forms library.</p>
+      <input type="text" id="inviteInput" placeholder="Enter invite code..." />
+      <button id="loginBtn">Access Library</button>
+      <div id="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- MAIN APP (HIDDEN UNTIL AUTHENTICATED) -->
+  <div id="app-container">
+    <header>
+      <div class="header-content">
+        <p class="eyebrow">Document library</p>
+        <h1>TESDA Forms</h1>
+        <p>Choose a folder below to open its forms.</p>
+      </div>
+    </header>
+    <main>
+      <div class="referral-panel">
+        <h3>Your Referral Status</h3>
+        <p id="user-status-text">Logged in successfully.</p>
+        <div id="invite-box" style="margin: 12px 0;"></div>
+        <button onclick="generateInvite()" id="gen-btn">Generate My One-Time Invite Code</button>
+        <button onclick="handleLogout()" class="logout-btn">Log Out</button>
+      </div>
+
+      <div class="section-heading">
+        <h2>Choose a folder</h2>
+        <span class="count">8 folders</span>
+      </div>
+      
+      <nav class="folder-grid" aria-label="TESDA form folders">
+        <a class="folder-card" href="tesda-computer-hardware-nc2-forms/tesda-computer-hardware-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Computer Hardware Servicing NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-2d-game-art-nc3-forms/tesda-2d-game-art-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">2D Game Art NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-animation-nc2-forms/tesda-animation-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Animation NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-cac-nc3-forms/tesda-cac-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CAC NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-css-nc2-forms%20(2)/tesda-css-nc2-forms%20(2).html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CSS NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-electronics-backend-nc2-forms/tesda-electronics-backend-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Electronics Backend NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-game-programming-nc3-forms/tesda-game-programming-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Game Programming NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-vgd-nc3-forms/tesda-vgd-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Visual Graphic Design NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://zilrvqbkshofyhvauml.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZWYiOiJ6aWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpatYwNDMxMjc4MjksImV4cCI6MjExOTc5MjgyOX0.8N8dOaA4-mjpryqKxV1pM2tBvV9c1sT4k2L5z9x0v6I';
 
-    let supabase;
+    function getSupabaseClient() {
+      if (window.supabase && window.supabase.createClient) {
+        return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+      return null;
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Initialize Supabase once DOM is ready
-      if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
-
       const loginBtn = document.getElementById('loginBtn');
       if (loginBtn) {
         loginBtn.addEventListener('click', handleLogin);
       }
 
-      // Check auto-login session
       const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
       if (activeUser) {
         unlockUI(activeUser);
@@ -278,19 +360,19 @@
         return;
       }
 
-      if (!supabase) {
-        if (errorMsg) errorMsg.innerText = "Initializing connection... please try again in a moment.";
+      const client = getSupabaseClient();
+      if (!client) {
+        if (errorMsg) errorMsg.innerText = "Network issue loading security library. Refresh and try again.";
         return;
       }
 
-      // Instant button feedback
       if (loginBtn) {
         loginBtn.disabled = true;
         loginBtn.innerText = "Checking...";
       }
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await client
           .from('users')
           .select('*')
           .eq('invite_code', code);
@@ -320,7 +402,7 @@
           updatePayload.is_active = false;
         }
 
-        await supabase
+        await client
           .from('users')
           .update(updatePayload)
           .eq('id', userRecord.id);
@@ -360,11 +442,12 @@
 
     async function generateInvite() {
       const user = JSON.parse(localStorage.getItem('tsda_user_session'));
-      if (!user || user.has_generated || !supabase) return;
+      const client = getSupabaseClient();
+      if (!user || user.has_generated || !client) return;
 
       const newCode = 'INVITE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      const { error } = await supabase
+      const { error } = await client
         .from('users')
         .insert([{
           username: `${user.username}_friend`,
@@ -379,7 +462,7 @@
         return;
       }
 
-      await supabase
+      await client
         .from('users')
         .update({ has_generated: true, generated_code: newCode })
         .eq('id', user.id);
@@ -401,6 +484,5 @@
       location.reload();
     }
   </script>
-
 </body>
 </html>
