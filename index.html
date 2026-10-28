@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0f172a">
   <title>TESDA Forms Library - Secure Access</title>
+
+  <!-- Performance Optimization: Preconnect to external origins -->
+  <link rel="preconnect" href="https://zilrvqbkshofyhvauml.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
   <style>
     :root {
       color-scheme: light;
@@ -51,8 +56,10 @@
       font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
+      transition: background 150ms ease;
     }
     .login-card button:hover { background: #123b70; }
+    .login-card button:disabled { background: #94a3b8; cursor: not-allowed; }
     #error-msg { color: #dc2626; font-size: 0.875rem; margin-top: 10px; }
 
     /* Main App Container (Hidden until logged in) */
@@ -147,6 +154,9 @@
     .referral-panel button:hover { background: #123b70; }
     .logout-btn { background: #dc2626 !important; margin-left: 10px; }
   </style>
+
+  <!-- Non-blocking script loading -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body>
 
@@ -156,7 +166,7 @@
       <h2>Restricted Access</h2>
       <p style="font-size: 0.9rem; color: #64748b;">Enter your invite code to open the TESDA forms library.</p>
       <input type="text" id="inviteInput" placeholder="Enter invite code..." />
-      <button onclick="handleLogin()">Access Library</button>
+      <button id="loginBtn">Access Library</button>
       <div id="error-msg"></div>
     </div>
   </div>
@@ -231,21 +241,24 @@
   </div>
 
   <!-- Supabase JS Client & Auth Logic -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://zilrvqbkshofyhvauml.supabase.co';
-    const SUPABASE_ANON_KEY = 'YOUR_EXACT_PUBLISHABLE_KEY_HERE';
+    const SUPABASE_ANON_KEY = 'sb_publishable_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZWYiOiJ6aWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpatYwNDMxMjc4MjksImV4cCI6MjExOTc5MjgyOX0.8N8dOaA4-mjpryqKxV1pM2tBvV9c1sT4k2L5z9x0v6I';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let supabase;
 
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Attach click listener directly to the button
-      const loginBtn = document.querySelector('.login-card button');
+      // Initialize Supabase once DOM is ready
+      if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+
+      const loginBtn = document.getElementById('loginBtn');
       if (loginBtn) {
         loginBtn.addEventListener('click', handleLogin);
       }
 
-      // 2. Check auto-login session
+      // Check auto-login session
       const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
       if (activeUser) {
         unlockUI(activeUser);
@@ -253,6 +266,7 @@
     });
 
     async function handleLogin() {
+      const loginBtn = document.getElementById('loginBtn');
       const codeInput = document.getElementById('inviteInput');
       const errorMsg = document.getElementById('error-msg');
       if (errorMsg) errorMsg.innerText = "";
@@ -262,6 +276,17 @@
       if (!code) {
         if (errorMsg) errorMsg.innerText = "Please enter an invite code.";
         return;
+      }
+
+      if (!supabase) {
+        if (errorMsg) errorMsg.innerText = "Initializing connection... please try again in a moment.";
+        return;
+      }
+
+      // Instant button feedback
+      if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.innerText = "Checking...";
       }
 
       try {
@@ -306,6 +331,11 @@
         unlockUI(userRecord);
       } catch (err) {
         if (errorMsg) errorMsg.innerText = "Error: " + err.message;
+      } finally {
+        if (loginBtn) {
+          loginBtn.disabled = false;
+          loginBtn.innerText = "Access Library";
+        }
       }
     }
 
@@ -330,7 +360,7 @@
 
     async function generateInvite() {
       const user = JSON.parse(localStorage.getItem('tsda_user_session'));
-      if (!user || user.has_generated) return;
+      if (!user || user.has_generated || !supabase) return;
 
       const newCode = 'INVITE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
