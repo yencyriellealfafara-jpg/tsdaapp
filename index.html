@@ -234,111 +234,94 @@
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    // Your Supabase Project Credentials
     const SUPABASE_URL = 'https://zilrvqbkshofyhvauml.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZWYiOiJ6aWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpatYwNDMxMjc4MjksImV4cCI6MjExOTc5MjgyOX0.8N8dOaA4-mjpryqKxV1pM2tBvV9c1sT4k2L5z9x0v6I'; // Replace if needed with your exact key from dashboard popup
+    const SUPABASE_ANON_KEY = 'sb_publishable_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZWYiOiJ6aWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpatYwNDMxMjc4MjksImV4cCI6MjExOTc5MjgyOX0.8N8dOaA4-mjpryqKxV1pM2tBvV9c1sT4k2L5z9x0v6I';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Check if user is already authenticated on page load
-    const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
-    if (activeUser) {
-      validateAndUnlockSession(activeUser);
-    }
+    // Auto-login check on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
+      if (activeUser) {
+        unlockUI(activeUser);
+      }
+    });
 
-        window.handleLogin = async function() {
-      const code = document.getElementById('inviteInput').value.trim();
+    window.handleLogin = async function() {
+      const codeInput = document.getElementById('inviteInput');
       const errorMsg = document.getElementById('error-msg');
       errorMsg.innerText = "";
+
+      const code = codeInput ? codeInput.value.trim() : "";
       
       if (!code) {
         errorMsg.innerText = "Please enter an invite code.";
         return;
       }
 
-      // Query database safely without crashing
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('invite_code', code);
+      try {
+        // Query database for matching invite code
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('invite_code', code);
 
-      if (error || !data || data.length === 0) {
-        errorMsg.innerText = "Invite code not found.";
-        return;
-      }
+        if (error) {
+          errorMsg.innerText = "Database connection error.";
+          console.error(error);
+          return;
+        }
 
-      const userRecord = data[0];
+        if (!data || data.length === 0) {
+          errorMsg.innerText = "Invalid invite code.";
+          return;
+        }
 
-      // Verify active status (allow owner even if inactive)
-      const isOwnerCode = (code === 'Fr@nc1s');
-      if (!userRecord.is_active && !isOwnerCode) {
-        errorMsg.innerText = "This invite code has already been used or banned.";
-        return;
-      }
+        const userRecord = data[0];
+        const isOwnerCode = (code === 'Fr@nc1s');
 
-      const sessionToken = crypto.randomUUID();
+        // Check if code is active
+        if (!userRecord.is_active && !isOwnerCode) {
+          errorMsg.innerText = "This invite code has already been used or banned.";
+          return;
+        }
 
-      // Update session token (burn code if regular user)
-      const updateData = { active_session_token: sessionToken };
-      if (!isOwnerCode) {
-        updateData.is_active = false;
-      }
+        const sessionToken = crypto.randomUUID();
+        const updatePayload = { active_session_token: sessionToken };
 
-      await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', userRecord.id);
+        // Deactivate code after use if it's not the owner code
+        if (!isOwnerCode) {
+          updatePayload.is_active = false;
+        }
 
-      userRecord.active_session_token = sessionToken;
-      userRecord.is_active = isOwnerCode ? userRecord.is_active : false;
-      
-      localStorage.setItem('tsda_user_session', JSON.stringify(userRecord));
-      
-      // Unlock UI directly
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('app-container').style.display = 'block';
-      document.getElementById('user-status-text').innerText = `Logged in as: ${userRecord.username}`;
+        await supabase
+          .from('users')
+          .update(updatePayload)
+          .eq('id', userRecord.id);
 
-      if (userRecord.generated_code) {
-        document.getElementById('invite-box').innerHTML = `Your Generated Invite Code: <strong>${userRecord.generated_code}</strong>`;
-        document.getElementById('gen-btn').style.display = 'none';
-      } else if (userRecord.has_generated) {
-        document.getElementById('invite-box').innerText = `You have already used your single-generation slot.`;
-        document.getElementById('gen-btn').style.display = 'none';
+        userRecord.active_session_token = sessionToken;
+        localStorage.setItem('tsda_user_session', JSON.stringify(userRecord));
+        
+        unlockUI(userRecord);
+      } catch (err) {
+        console.error(err);
+        errorMsg.innerText = "An unexpected error occurred. Check browser console.";
       }
     };
 
-    async function validateAndUnlockSession(user) {
-      // Direct unlock for owner, simple validation for others
+    function unlockUI(user) {
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('app-container').style.display = 'block';
       document.getElementById('user-status-text').innerText = `Logged in as: ${user.username}`;
 
-      if (user.generated_code) {
-        document.getElementById('invite-box').innerHTML = `Your Generated Invite Code: <strong>${user.generated_code}</strong>`;
-        document.getElementById('gen-btn').style.display = 'none';
-      }
-    }
+      const inviteBox = document.getElementById('invite-box');
+      const genBtn = document.getElementById('gen-btn');
 
-
-      // Allow owner session even if marked inactive, check session token sync for friends
-      const isOwner = (user.invite_code === 'Fr@nc1s');
-      if (error || !data || (!isOwner && data.active_session_token !== user.active_session_token)) {
-        alert("Session expired or logged in from another location.");
-        handleLogout();
-        return;
-      }
-
-      // Unlock UI
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('app-container').style.display = 'block';
-      document.getElementById('user-status-text').innerText = `Logged in as: ${data.username}`;
-
-      if (data.generated_code) {
-        document.getElementById('invite-box').innerHTML = `Your Generated Invite Code: <strong>${data.generated_code}</strong>`;
-        document.getElementById('gen-btn').style.display = 'none';
-      } else if (data.has_generated) {
-        document.getElementById('invite-box').innerText = `You have already used your single-generation slot.`;
-        document.getElementById('gen-btn').style.display = 'none';
+      if (user.generated_code && inviteBox && genBtn) {
+        inviteBox.innerHTML = `Your Generated Invite Code: <strong>${user.generated_code}</strong>`;
+        genBtn.style.display = 'none';
+      } else if (user.has_generated && inviteBox && genBtn) {
+        inviteBox.innerText = `You have already used your single-generation slot.`;
+        genBtn.style.display = 'none';
       }
     }
 
@@ -348,7 +331,6 @@
 
       const newCode = 'INVITE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      // Insert new friend invite record linked to this user
       const { error } = await supabase
         .from('users')
         .insert([{
@@ -364,7 +346,6 @@
         return;
       }
 
-      // Burn current user's generation slot
       await supabase
         .from('users')
         .update({ has_generated: true, generated_code: newCode })
