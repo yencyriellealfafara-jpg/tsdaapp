@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0f172a">
-  <title>TESDA Forms Library</title>
+  <title>TESDA Forms Library - Secure Access</title>
   <style>
     :root {
       color-scheme: light;
@@ -12,28 +12,61 @@
       color: #172033;
       background: #f3f6fb;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    
+    /* Login Screen Overlay */
+    #login-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       min-height: 100vh;
+      background: linear-gradient(135deg, #123b70, #176b87);
+      padding: 24px;
     }
+    .login-card {
+      background: #fff;
+      padding: 32px;
+      border-radius: 16px;
+      width: min(100%, 400px);
+      box-shadow: 0 12px 32px rgb(0 0 / 15%);
+      text-align: center;
+    }
+    .login-card h2 { margin-top: 0; color: #123b70; font-size: 1.5rem; }
+    .login-card input {
+      width: 100%;
+      padding: 12px;
+      margin: 16px 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .login-card button {
+      width: 100%;
+      padding: 12px;
+      background: #176b87;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .login-card button:hover { background: #123b70; }
+    #error-msg { color: #dc2626; font-size: 0.875rem; margin-top: 10px; }
+
+    /* Main App Container (Hidden until logged in) */
+    #app-container { display: none; }
 
     header {
       padding: 56px 24px 44px;
       color: #fff;
       background: linear-gradient(135deg, #123b70, #176b87);
     }
-
-    .header-content,
-    main {
+    .header-content, main {
       width: min(100%, 1080px);
       margin: 0 auto;
     }
-
     .eyebrow {
       margin: 0 0 10px;
       color: #b8e4f0;
@@ -42,13 +75,11 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
     }
-
     h1 {
       margin: 0;
       font-size: clamp(2rem, 5vw, 3.25rem);
       letter-spacing: -0.04em;
     }
-
     header p:last-child {
       max-width: 620px;
       margin: 14px 0 0;
@@ -56,11 +87,7 @@
       font-size: 1.05rem;
       line-height: 1.6;
     }
-
-    main {
-      padding: 36px 24px 56px;
-    }
-
+    main { padding: 36px 24px 56px; }
     .section-heading {
       display: flex;
       align-items: end;
@@ -68,23 +95,14 @@
       gap: 16px;
       margin-bottom: 20px;
     }
-
-    h2 {
-      margin: 0;
-      font-size: 1.3rem;
-    }
-
-    .count {
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-
+    h2 { margin: 0; font-size: 1.3rem; }
+    .count { color: #64748b; font-size: 0.9rem; }
+    
     .folder-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
       gap: 16px;
     }
-
     .folder-card {
       display: flex;
       min-height: 152px;
@@ -99,115 +117,236 @@
       box-shadow: 0 3px 12px rgb(15 23 42 / 4%);
       transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
     }
-
     .folder-card:hover {
       transform: translateY(-3px);
       border-color: #72b9cb;
       box-shadow: 0 10px 24px rgb(15 23 42 / 10%);
     }
-
-    .folder-card:focus-visible {
-      outline: 3px solid #1683a1;
-      outline-offset: 3px;
-    }
-
     .folder-icon {
       display: grid;
-      width: 42px;
-      height: 42px;
-      margin-bottom: 16px;
-      place-items: center;
-      border-radius: 11px;
-      background: #e9f5f8;
-      font-size: 1.25rem;
+      width: 42px; height: 42px; margin-bottom: 16px;
+      place-items: center; border-radius: 11px; background: #e9f5f8; font-size: 1.25rem;
     }
+    .folder-name { font-size: 1rem; font-weight: 700; line-height: 1.4; }
+    .folder-action { margin-top: 8px; color: #557087; font-size: 0.88rem; }
 
-    .folder-name {
-      font-size: 1rem;
-      font-weight: 700;
-      line-height: 1.4;
+    /* Referral Panel Styling */
+    .referral-panel {
+      background: #fff;
+      padding: 24px;
+      border-radius: 14px;
+      border: 1px solid #e1e8f0;
+      margin-bottom: 32px;
+      box-shadow: 0 3px 12px rgb(15 23 42 / 4%);
     }
-
-    .folder-action {
-      margin-top: 8px;
-      color: #557087;
-      font-size: 0.88rem;
+    .referral-panel h3 { margin-top: 0; color: #123b70; }
+    .referral-panel button {
+      background: #1683a1; color: white; border: none; padding: 10px 16px;
+      border-radius: 6px; font-weight: bold; cursor: pointer;
     }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
+    .referral-panel button:hover { background: #123b70; }
+    .logout-btn { background: #dc2626 !important; margin-left: 10px; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <p class="eyebrow">Document library</p>
-      <h1>TESDA Forms</h1>
-      <p>Choose a folder below to open its forms.</p>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <h2>Restricted Access</h2>
+      <p style="font-size: 0.9rem; color: #64748b;">Enter your invite code to open the TESDA forms library.</p>
+      <input type="text" id="inviteInput" placeholder="Enter invite code..." />
+      <button onclick="handleLogin()">Access Library</button>
+      <div id="error-msg"></div>
     </div>
-  </header>
-  <main>
-    <div class="section-heading">
-      <h2>Choose a folder</h2>
-      <span class="count">8 folders</span>
-    </div>
-    
-    <nav class="folder-grid" aria-label="TESDA form folders">
-      <a class="folder-card" href="tesda-computer-hardware-nc2-forms/tesda-computer-hardware-nc2-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">Computer Hardware Servicing NC II</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
+  </div>
+
+  <!-- MAIN APP (HIDDEN UNTIL AUTHENTICATED) -->
+  <div id="app-container">
+    <header>
+      <div class="header-content">
+        <p class="eyebrow">Document library</p>
+        <h1>TESDA Forms</h1>
+        <p>Choose a folder below to open its forms.</p>
+      </div>
+    </header>
+    <main>
+      <!-- Referral Tree Controls -->
+      <div class="referral-panel">
+        <h3>Your Referral Status</h3>
+        <p id="user-status-text">Logged in successfully.</p>
+        <div id="invite-box" style="margin: 12px 0;"></div>
+        <button onclick="generateInvite()" id="gen-btn">Generate My One-Time Invite Code</button>
+        <button onclick="handleLogout()" class="logout-btn">Log Out</button>
+      </div>
+
+      <div class="section-heading">
+        <h2>Choose a folder</h2>
+        <span class="count">8 folders</span>
+      </div>
       
-    <nav class="folder-grid" aria-label="TESDA form folders">
-      <a class="folder-card" href="tesda-2d-game-art-nc3-forms/tesda-2d-game-art-nc3-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">2D Game Art NC III</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
+      <nav class="folder-grid" aria-label="TESDA form folders">
+        <a class="folder-card" href="tesda-computer-hardware-nc2-forms/tesda-computer-hardware-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Computer Hardware Servicing NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-2d-game-art-nc3-forms/tesda-2d-game-art-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">2D Game Art NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-animation-nc2-forms/tesda-animation-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Animation NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-cac-nc3-forms/tesda-cac-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CAC NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-css-nc2-forms%20(2)/tesda-css-nc2-forms%20(2).html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CSS NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-electronics-backend-nc2-forms/tesda-electronics-backend-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Electronics Backend NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-game-programming-nc3-forms/tesda-game-programming-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Game Programming NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-vgd-nc3-forms/tesda-vgd-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Visual Graphic Design NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <!-- Supabase JS Client Integration -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    // TODO: Replace with your actual Supabase Project URL and Anon Public Key from Project Settings > API
+    const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_M1iPaDIOnXj9he5yDloXDw_Fcf0FxRL';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Check if user is already logged in on page load
+    const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
+    if (activeUser) {
+      validateAndUnlockSession(activeUser);
+    }
+
+    window.handleLogin = async function() {
+      const code = document.getElementById('inviteInput').value.trim();
+      const errorMsg = document.getElementById('error-msg');
       
-      <a class="folder-card" href="tesda-animation-nc2-forms/tesda-animation-nc2-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">Animation NC II</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
-      <a class="folder-card" href="tesda-cac-nc3-forms/tesda-cac-nc3-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">CAC NC III</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
-      <a class="folder-card" href="tesda-css-nc2-forms%20(2)/tesda-css-nc2-forms%20(2).html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">CSS NC II</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
-      <a class="folder-card" href="tesda-electronics-backend-nc2-forms/tesda-electronics-backend-nc2-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">Electronics Backend NC II</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
-      <a class="folder-card" href="tesda-game-programming-nc3-forms/tesda-game-programming-nc3-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">Game Programming NC III</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
-      <a class="folder-card" href="tesda-masonry-nc2-forms/tesda-masonry-nc2-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">Masonry NC II</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
-      <a class="folder-card" href="tesda-vgd-nc3-forms/tesda-vgd-nc3-forms.html">
-        <span class="folder-icon" aria-hidden="true">📁</span>
-        <span class="folder-name">Visual Graphic Design NC III</span>
-        <span class="folder-action">Open forms →</span>
-      </a>
-    </nav>
-  </main>
+      if (!code) {
+        errorMsg.innerText = "Please enter an invite code.";
+        return;
+      }
+
+      // Query database for code
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('invite_code', code)
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        errorMsg.innerText = "Invalid, banned, or used invite code.";
+        return;
+      }
+
+      // Generate a unique session token to lock out other devices
+      const sessionToken = crypto.randomUUID();
+      await supabase
+        .from('users')
+        .update({ active_session_token: sessionToken })
+        .eq('id', data.id);
+
+      data.active_session_token = sessionToken;
+      localStorage.setItem('tsda_user_session', JSON.stringify(data));
+      validateAndUnlockSession(data);
+    };
+
+    async function validateAndUnlockSession(user) {
+      // Re-verify against database to block disabled users or multi-location logins
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error || !data || !data.is_active || data.active_session_token !== user.active_session_token) {
+        alert("Session expired, account disabled, or logged in from another location.");
+        handleLogout();
+        return;
+      }
+
+      // Unlock UI
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('app-container').style.display = 'block';
+      document.getElementById('user-status-text').innerText = `Logged in as: ${data.username}`;
+
+      if (data.generated_code) {
+        document.getElementById('invite-box').innerHTML = `Your Generated Invite Code: <strong>${data.generated_code}</strong>`;
+        document.getElementById('gen-btn').style.display = 'none';
+      } else if (data.has_generated) {
+        document.getElementById('invite-box').innerText = `You have already used your single-generation slot.`;
+        document.getElementById('gen-btn').style.display = 'none';
+      }
+    }
+
+    window.generateInvite = async function() {
+      const user = JSON.parse(localStorage.getItem('tsda_user_session'));
+      if (!user || user.has_generated) return;
+
+      const newCode = 'INVITE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+      // Insert new user entry representing the generated invite slot linked to this user
+      const { error } = await supabase
+        .from('users')
+        .insert([{
+          username: `${user.username}_friend`,
+          invite_code: newCode,
+          invited_by: user.username,
+          has_generated: false,
+          is_active: true
+        }]);
+
+      if (error) {
+        alert("Error generating code: " + error.message);
+        return;
+      }
+
+      // Update current user so they can't generate again
+      await supabase
+        .from('users')
+        .update({ has_generated: true, generated_code: newCode })
+        .eq('id', user.id);
+
+      user.has_generated = true;
+      user.generated_code = newCode;
+      localStorage.setItem('tsda_user_session', JSON.stringify(user));
+
+      document.getElementById('invite-box').innerHTML = `Your Generated Invite Code: <strong>${newCode}</strong>`;
+      document.getElementById('gen-btn').style.display = 'none';
+    };
+
+    window.handleLogout = function() {
+      localStorage.removeItem('tsda_user_session');
+      location.reload();
+    };
+  </script>
 </body>
 </html>
