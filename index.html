@@ -233,15 +233,19 @@
   <!-- Supabase JS Client & Auth Logic -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Paste your exact Project URL and Publishable Key from Supabase Dashboard
     const SUPABASE_URL = 'https://zilrvqbkshofyhvauml.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_M1iPaDIOnXj9he5yDloXDw_Fcf0FxRL';
+    const SUPABASE_ANON_KEY = 'YOUR_EXACT_PUBLISHABLE_KEY_HERE';
 
-    // Initialize Supabase Client
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Auto-login check on page load
     document.addEventListener('DOMContentLoaded', () => {
+      // 1. Attach click listener directly to the button
+      const loginBtn = document.querySelector('.login-card button');
+      if (loginBtn) {
+        loginBtn.addEventListener('click', handleLogin);
+      }
+
+      // 2. Check auto-login session
       const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
       if (activeUser) {
         unlockUI(activeUser);
@@ -251,64 +255,66 @@
     async function handleLogin() {
       const codeInput = document.getElementById('inviteInput');
       const errorMsg = document.getElementById('error-msg');
-      errorMsg.innerText = "";
+      if (errorMsg) errorMsg.innerText = "";
 
       const code = codeInput ? codeInput.value.trim() : "";
       
       if (!code) {
-        errorMsg.innerText = "Please enter an invite code.";
+        if (errorMsg) errorMsg.innerText = "Please enter an invite code.";
         return;
       }
 
-      // Query database for matching invite code
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('invite_code', code);
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('invite_code', code);
 
-      if (error) {
-        errorMsg.innerText = "Database error: " + error.message;
-        console.error(error);
-        return;
+        if (error) {
+          if (errorMsg) errorMsg.innerText = "Database error: " + error.message;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          if (errorMsg) errorMsg.innerText = "Invalid invite code.";
+          return;
+        }
+
+        const userRecord = data[0];
+        const isOwnerCode = (code === 'Fr@nc1s');
+
+        if (!userRecord.is_active && !isOwnerCode) {
+          if (errorMsg) errorMsg.innerText = "This invite code has already been used or banned.";
+          return;
+        }
+
+        const sessionToken = crypto.randomUUID();
+        const updatePayload = { active_session_token: sessionToken };
+
+        if (!isOwnerCode) {
+          updatePayload.is_active = false;
+        }
+
+        await supabase
+          .from('users')
+          .update(updatePayload)
+          .eq('id', userRecord.id);
+
+        userRecord.active_session_token = sessionToken;
+        localStorage.setItem('tsda_user_session', JSON.stringify(userRecord));
+        
+        unlockUI(userRecord);
+      } catch (err) {
+        if (errorMsg) errorMsg.innerText = "Error: " + err.message;
       }
-
-      if (!data || data.length === 0) {
-        errorMsg.innerText = "Invalid invite code.";
-        return;
-      }
-
-      const userRecord = data[0];
-      const isOwnerCode = (code === 'Fr@nc1s');
-
-      // Check if code is active
-      if (!userRecord.is_active && !isOwnerCode) {
-        errorMsg.innerText = "This invite code has already been used or banned.";
-        return;
-      }
-
-      const sessionToken = crypto.randomUUID();
-      const updatePayload = { active_session_token: sessionToken };
-
-      // Deactivate code after use if it's not the owner code
-      if (!isOwnerCode) {
-        updatePayload.is_active = false;
-      }
-
-      await supabase
-        .from('users')
-        .update(updatePayload)
-        .eq('id', userRecord.id);
-
-      userRecord.active_session_token = sessionToken;
-      localStorage.setItem('tsda_user_session', JSON.stringify(userRecord));
-      
-      unlockUI(userRecord);
     }
 
     function unlockUI(user) {
       document.getElementById('login-overlay').style.display = 'none';
       document.getElementById('app-container').style.display = 'block';
-      document.getElementById('user-status-text').innerText = `Logged in as: ${user.username}`;
+      
+      const userStatus = document.getElementById('user-status-text');
+      if (userStatus) userStatus.innerText = `Logged in as: ${user.username}`;
 
       const inviteBox = document.getElementById('invite-box');
       const genBtn = document.getElementById('gen-btn');
@@ -352,8 +358,12 @@
       user.generated_code = newCode;
       localStorage.setItem('tsda_user_session', JSON.stringify(user));
 
-      document.getElementById('invite-box').innerHTML = `Your Generated Invite Code: <strong>${newCode}</strong>`;
-      document.getElementById('gen-btn').style.display = 'none';
+      const inviteBox = document.getElementById('invite-box');
+      const genBtn = document.getElementById('gen-btn');
+      if (inviteBox && genBtn) {
+        inviteBox.innerHTML = `Your Generated Invite Code: <strong>${newCode}</strong>`;
+        genBtn.style.display = 'none';
+      }
     }
 
     function handleLogout() {
@@ -361,5 +371,6 @@
       location.reload();
     }
   </script>
+
 </body>
 </html>
