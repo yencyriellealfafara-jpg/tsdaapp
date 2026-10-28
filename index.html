@@ -230,16 +230,16 @@
     </main>
   </div>
 
-  <!-- Supabase JS Client Integration -->
+  <!-- Supabase JS Client & Auth Logic -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    // TODO: Replace with your actual Supabase Project URL and Anon Public Key from Project Settings > API
-    const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_M1iPaDIOnXj9he5yDloXDw_Fcf0FxRL';
+    // Your Supabase Project Credentials
+    const SUPABASE_URL = 'https://zilrvqbkshofyhvauml.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZWYiOiJ6aWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpatYwNDMxMjc4MjksImV4cCI6MjExOTc5MjgyOX0.8N8dOaA4-mjpryqKxV1pM2tBvV9c1sT4k2L5z9x0v6I'; // Replace if needed with your exact key from dashboard popup
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Check if user is already logged in on page load
+    // Check if user is already authenticated on page load
     const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
     if (activeUser) {
       validateAndUnlockSession(activeUser);
@@ -263,16 +263,31 @@
         .single();
 
       if (error || !data) {
-        errorMsg.innerText = "Invalid, banned, or used invite code.";
+        errorMsg.innerText = "Invalid, already used, or banned invite code.";
         return;
       }
 
       // Generate a unique session token to lock out other devices
       const sessionToken = crypto.randomUUID();
-      await supabase
-        .from('users')
-        .update({ active_session_token: sessionToken })
-        .eq('id', data.id);
+
+      // If it's NOT the owner master code, consume/deactivate the invite code so it's 1-user only
+      const isOwnerCode = (code === '@dm1n1strator30'); // Update this string if your owner code is different
+      
+      if (!isOwnerCode) {
+        await supabase
+          .from('users')
+          .update({ 
+            is_active: false, // Burns the invite code so no one else can log in with it
+            active_session_token: sessionToken 
+          })
+          .eq('id', data.id);
+      } else {
+        // Just update session token for owner
+        await supabase
+          .from('users')
+          .update({ active_session_token: sessionToken })
+          .eq('id', data.id);
+      }
 
       data.active_session_token = sessionToken;
       localStorage.setItem('tsda_user_session', JSON.stringify(data));
@@ -280,15 +295,16 @@
     };
 
     async function validateAndUnlockSession(user) {
-      // Re-verify against database to block disabled users or multi-location logins
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (error || !data || !data.is_active || data.active_session_token !== user.active_session_token) {
-        alert("Session expired, account disabled, or logged in from another location.");
+      // Allow owner session even if marked inactive, check session token sync for friends
+      const isOwner = (user.invite_code === '@dm1n1strator30');
+      if (error || !data || (!isOwner && data.active_session_token !== user.active_session_token)) {
+        alert("Session expired or logged in from another location.");
         handleLogout();
         return;
       }
@@ -313,7 +329,7 @@
 
       const newCode = 'INVITE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      // Insert new user entry representing the generated invite slot linked to this user
+      // Insert new friend invite record linked to this user
       const { error } = await supabase
         .from('users')
         .insert([{
@@ -329,7 +345,7 @@
         return;
       }
 
-      // Update current user so they can't generate again
+      // Burn current user's generation slot
       await supabase
         .from('users')
         .update({ has_generated: true, generated_code: newCode })
