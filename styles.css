@@ -27,6 +27,33 @@ body { margin: 0; min-height: 100vh; }
   text-align: center;
 }
 
+/* Tab Switching Header */
+.tab-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 150ms ease;
+}
+
+.tab-btn.active {
+  color: #176b87;
+  border-bottom-color: #176b87;
+}
+
 .login-card h2 { margin-top: 0; color: #123b70; font-size: 1.5rem; }
 
 .login-description { font-size: 0.9rem; color: #64748b; }
@@ -34,7 +61,7 @@ body { margin: 0; min-height: 100vh; }
 .login-card input {
   width: 100%;
   padding: 12px;
-  margin: 16px 0;
+  margin: 8px 0;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 1rem;
@@ -43,6 +70,7 @@ body { margin: 0; min-height: 100vh; }
 .login-card button {
   width: 100%;
   padding: 12px;
+  margin-top: 12px;
   background: #176b87;
   color: white;
   border: none;

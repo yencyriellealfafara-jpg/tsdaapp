@@ -12,16 +12,37 @@
   <script src="app.js" defer></script>
 </head>
 <body>
+  <!-- AUTHENTICATION OVERLAY -->
   <div id="login-overlay">
     <div class="login-card">
-      <h2>Restricted Access</h2>
-      <p class="login-description">Enter your invite code to open the TESDA forms library.</p>
-      <input type="text" id="inviteInput" placeholder="Enter invite code...">
-      <button id="loginBtn">Access Library</button>
+      <div class="tab-header">
+        <button class="tab-btn active" id="tab-login">Log In</button>
+        <button class="tab-btn" id="tab-register">Register</button>
+      </div>
+
+      <!-- LOGIN TAB -->
+      <div id="form-login">
+        <h2>Restricted Access</h2>
+        <p class="login-description">Enter your registered username and invite code.</p>
+        <input type="text" id="loginUsername" placeholder="Enter username...">
+        <input type="text" id="loginCode" placeholder="Enter invite code...">
+        <button id="loginBtn">Access Library</button>
+      </div>
+
+      <!-- REGISTER TAB -->
+      <div id="form-register" style="display: none;">
+        <h2>Create Account</h2>
+        <p class="login-description">Register using a valid friend's invite code.</p>
+        <input type="text" id="regUsername" placeholder="Choose a username...">
+        <input type="text" id="regCode" placeholder="Enter single-use invite code...">
+        <button id="regBtn">Register & Log In</button>
+      </div>
+
       <div id="error-msg"></div>
     </div>
   </div>
 
+  <!-- MAIN APP CONTAINER -->
   <div id="app-container">
     <header>
       <div class="header-content">

@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3NoZWZ5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjExOTc5MjgyOX0.8N8dOaA4-mjpryqKxV1pM2tBvV9c1sT4k2L5z9x0v6I';
 
 function getSupabaseClient() {
   if (window.supabase && window.supabase.createClient) {
@@ -9,83 +9,198 @@ function getSupabaseClient() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginBtn').addEventListener('click', handleLogin);
-  document.getElementById('gen-btn').addEventListener('click', generateInvite);
-  document.getElementById('logout-btn').addEventListener('click', handleLogout);
+  // Tab Event Listeners
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  if (tabLogin) tabLogin.addEventListener('click', () => switchTab('login'));
+  if (tabRegister) tabRegister.addEventListener('click', () => switchTab('register'));
 
+  // Form Submit Event Listeners
+  const loginBtn = document.getElementById('loginBtn');
+  const regBtn = document.getElementById('regBtn');
+  const genBtn = document.getElementById('gen-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+  if (regBtn) regBtn.addEventListener('click', handleRegister);
+  if (genBtn) genBtn.addEventListener('click', generateInvite);
+  if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+  // Check cached session
   const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
   if (activeUser) {
     unlockUI(activeUser);
   }
 });
 
-async function handleLogin() {
-  const loginBtn = document.getElementById('loginBtn');
-  const codeInput = document.getElementById('inviteInput');
+function switchTab(tab) {
   const errorMsg = document.getElementById('error-msg');
-  errorMsg.innerText = "";
+  if (errorMsg) errorMsg.innerText = "";
 
-  const code = codeInput.value.trim();
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const formLogin = document.getElementById('form-login');
+  const formRegister = document.getElementById('form-register');
 
-  if (!code) {
-    errorMsg.innerText = "Please enter an invite code.";
+  if (tab === 'login') {
+    tabLogin.classList.add('active');
+    tabRegister.classList.remove('active');
+    formLogin.style.display = 'block';
+    formRegister.style.display = 'none';
+  } else {
+    tabRegister.classList.add('active');
+    tabLogin.classList.remove('active');
+    formRegister.style.display = 'block';
+    formLogin.style.display = 'none';
+  }
+}
+
+// REGISTER FUNCTIONALITY
+async function handleRegister() {
+  const regBtn = document.getElementById('regBtn');
+  const usernameInput = document.getElementById('regUsername');
+  const codeInput = document.getElementById('regCode');
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "";
+
+  const username = usernameInput ? usernameInput.value.trim() : "";
+  const code = codeInput ? codeInput.value.trim() : "";
+
+  if (!username || !code) {
+    if (errorMsg) errorMsg.innerText = "Please provide both a username and invite code.";
     return;
   }
 
   const client = getSupabaseClient();
   if (!client) {
-    errorMsg.innerText = "Network issue loading security library. Refresh and try again.";
+    if (errorMsg) errorMsg.innerText = "Connection issue. Refresh and try again.";
     return;
   }
 
-  loginBtn.disabled = true;
-  loginBtn.innerText = "Checking...";
+  if (regBtn) {
+    regBtn.disabled = true;
+    regBtn.innerText = "Registering...";
+  }
 
   try {
-    const { data, error } = await client
+    // 1. Check if username is already taken
+    const { data: existingUser } = await client
       .from('users')
-      .select('*')
-      .eq('invite_code', code);
+      .select('id')
+      .eq('username', username);
 
-    if (error) {
-      errorMsg.innerText = "Database error: " + error.message;
+    if (existingUser && existingUser.length > 0) {
+      if (errorMsg) errorMsg.innerText = "Username is already taken. Choose another.";
       return;
     }
 
-    if (!data || data.length === 0) {
-      errorMsg.innerText = "Invalid invite code.";
+    // 2. Validate invite code from 'invites' table
+    const { data: inviteData, error: inviteErr } = await client
+      .from('invites')
+      .select('*')
+      .eq('code', code)
+      .eq('is_used', false);
+
+    if (inviteErr || !inviteData || inviteData.length === 0) {
+      if (errorMsg) errorMsg.innerText = "Invalid or already used invite code.";
+      return;
+    }
+
+    const validInvite = inviteData[0];
+
+    // 3. Register user linked to the referrer who generated the code
+    const { data: newUser, error: userErr } = await client
+      .from('users')
+      .insert([{
+        username: username,
+        invite_code: code,
+        invited_by: validInvite.created_by,
+        is_active: true
+      }])
+      .select();
+
+    if (userErr || !newUser) {
+      if (errorMsg) errorMsg.innerText = "Registration failed: " + userErr.message;
+      return;
+    }
+
+    // 4. Burn invite code
+    await client
+      .from('invites')
+      .update({ is_used: true, used_by: username })
+      .eq('id', validInvite.id);
+
+    localStorage.setItem('tsda_user_session', JSON.stringify(newUser[0]));
+    unlockUI(newUser[0]);
+
+  } catch (err) {
+    if (errorMsg) errorMsg.innerText = "Error: " + err.message;
+  } finally {
+    if (regBtn) {
+      regBtn.disabled = false;
+      regBtn.innerText = "Register & Log In";
+    }
+  }
+}
+
+// LOGIN FUNCTIONALITY
+async function handleLogin() {
+  const loginBtn = document.getElementById('loginBtn');
+  const userInput = document.getElementById('loginUsername');
+  const codeInput = document.getElementById('loginCode');
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "";
+
+  const username = userInput ? userInput.value.trim() : "";
+  const code = codeInput ? codeInput.value.trim() : "";
+
+  if (!username || !code) {
+    if (errorMsg) errorMsg.innerText = "Please enter both your username and invite code.";
+    return;
+  }
+
+  const client = getSupabaseClient();
+  if (!client) {
+    if (errorMsg) errorMsg.innerText = "Connection issue. Refresh and try again.";
+    return;
+  }
+
+  if (loginBtn) {
+    loginBtn.disabled = true;
+    loginBtn.innerText = "Checking...";
+  }
+
+  try {
+    const isOwnerCode = (username === 'Francis' && code === 'Fr@nc1s');
+
+    const { data, error } = await client
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .eq('invite_code', code);
+
+    if (error || !data || data.length === 0) {
+      if (errorMsg) errorMsg.innerText = "Invalid username or invite code combination.";
       return;
     }
 
     const userRecord = data[0];
-    const isOwnerCode = (code === 'Fr@nc1s');
 
     if (!userRecord.is_active && !isOwnerCode) {
-      errorMsg.innerText = "This invite code has already been used or banned.";
+      if (errorMsg) errorMsg.innerText = "This account has been deactivated.";
       return;
     }
 
-    const sessionToken = crypto.randomUUID();
-    const updatePayload = { active_session_token: sessionToken };
-
-    if (!isOwnerCode) {
-      updatePayload.is_active = false;
-    }
-
-    await client
-      .from('users')
-      .update(updatePayload)
-      .eq('id', userRecord.id);
-
-    userRecord.active_session_token = sessionToken;
     localStorage.setItem('tsda_user_session', JSON.stringify(userRecord));
-
     unlockUI(userRecord);
+
   } catch (err) {
-    errorMsg.innerText = "Error: " + err.message;
+    if (errorMsg) errorMsg.innerText = "Error: " + err.message;
   } finally {
-    loginBtn.disabled = false;
-    loginBtn.innerText = "Access Library";
+    if (loginBtn) {
+      loginBtn.disabled = false;
+      loginBtn.innerText = "Access Library";
+    }
   }
 }
 
@@ -94,35 +209,25 @@ function unlockUI(user) {
   document.getElementById('app-container').style.display = 'block';
 
   const userStatus = document.getElementById('user-status-text');
-  if (userStatus) userStatus.innerText = `Logged in as: ${user.username}`;
-
-  const inviteBox = document.getElementById('invite-box');
-  const genBtn = document.getElementById('gen-btn');
-
-  if (user.generated_code && inviteBox && genBtn) {
-    inviteBox.innerHTML = `Your Generated Invite Code: <strong>${user.generated_code}</strong>`;
-    genBtn.style.display = 'none';
-  } else if (user.has_generated && inviteBox && genBtn) {
-    inviteBox.innerText = `You have already used your single-generation slot.`;
-    genBtn.style.display = 'none';
+  if (userStatus) {
+    userStatus.innerText = `Logged in as: ${user.username} (Invited by: ${user.invited_by})`;
   }
 }
 
+// GENERATE ONE-TIME FRIEND INVITE CODE
 async function generateInvite() {
   const user = JSON.parse(localStorage.getItem('tsda_user_session'));
   const client = getSupabaseClient();
-  if (!user || user.has_generated || !client) return;
+  if (!user || !client) return;
 
   const newCode = 'INVITE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const { error } = await client
-    .from('users')
+    .from('invites')
     .insert([{
-      username: `${user.username}_friend`,
-      invite_code: newCode,
-      invited_by: user.username,
-      has_generated: false,
-      is_active: true
+      code: newCode,
+      created_by: user.username,
+      is_used: false
     }]);
 
   if (error) {
@@ -130,20 +235,9 @@ async function generateInvite() {
     return;
   }
 
-  await client
-    .from('users')
-    .update({ has_generated: true, generated_code: newCode })
-    .eq('id', user.id);
-
-  user.has_generated = true;
-  user.generated_code = newCode;
-  localStorage.setItem('tsda_user_session', JSON.stringify(user));
-
   const inviteBox = document.getElementById('invite-box');
-  const genBtn = document.getElementById('gen-btn');
-  if (inviteBox && genBtn) {
-    inviteBox.innerHTML = `Your Generated Invite Code: <strong>${newCode}</strong>`;
-    genBtn.style.display = 'none';
+  if (inviteBox) {
+    inviteBox.innerHTML = `Single-use Invite Code for a friend: <strong>${newCode}</strong>`;
   }
 }
 
