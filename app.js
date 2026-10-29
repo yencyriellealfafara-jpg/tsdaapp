@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3NoZWZ5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
+const SUPABASE_URL = 'https://zilrvqbkshofyhvauml.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjExOTc5MjgyOX0.8N8dOaA4-mjpryqKxV1pM2tBvV9c1sT4k2L5z9x0v6I';
 
 function getSupabaseClient() {
   if (window.supabase && window.supabase.createClient) {
@@ -87,7 +87,7 @@ async function handleRegister() {
     const { data: existingUser } = await client
       .from('users')
       .select('id')
-      .eq('username', username);
+      .ilike('username', username);
 
     if (existingUser && existingUser.length > 0) {
       if (errorMsg) errorMsg.innerText = "Username is already taken. Choose another.";
@@ -171,14 +171,22 @@ async function handleLogin() {
   }
 
   try {
-        const isOwnerCode = (username.toLowerCase() === 'francis' && code === 'Fr@nc1s');
+    const isOwnerCode = (username.toLowerCase() === 'francis' && code === 'Fr@nc1s');
 
-    // Uses .ilike for case-insensitive matching and handles extra spaces gracefully
     const { data, error } = await client
       .from('users')
       .select('*')
       .ilike('username', username)
       .eq('invite_code', code);
+
+    if (error) {
+      if (errorMsg) errorMsg.innerText = "Database error: " + error.message;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      if (errorMsg) errorMsg.innerText = "Invalid username or invite code combination.";
+      return;
     }
 
     const userRecord = data[0];
