@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3NoZWZ5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
 
 let supabase;
 
@@ -11,31 +11,9 @@ function getSupabaseClient() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Bind tab buttons
-  const tabLogin = document.getElementById('tab-login');
-  const tabRegister = document.getElementById('tab-register');
-  if (tabLogin) tabLogin.onclick = () => switchTab('login');
-  if (tabRegister) tabRegister.onclick = () => switchTab('register');
-
-  // Bind submit buttons directly
-  const loginBtn = document.getElementById('loginBtn');
-  const regBtn = document.getElementById('regBtn');
-  const genBtn = document.getElementById('gen-btn');
-  const logoutBtn = document.getElementById('logout-btn');
-
-  if (loginBtn) loginBtn.onclick = handleLogin;
-  if (regBtn) regBtn.onclick = handleRegister;
-  if (genBtn) genBtn.onclick = generateInvite;
-  if (logoutBtn) logoutBtn.onclick = handleLogout;
-
-  // Initialize client early
   getSupabaseClient();
-
-  // Check cached session
   const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
-  if (activeUser) {
-    unlockUI(activeUser);
-  }
+  if (activeUser) unlockUI(activeUser);
 });
 
 function switchTab(tab) {
@@ -77,7 +55,7 @@ async function handleLogin() {
 
   const client = getSupabaseClient();
   if (!client) {
-    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again in a second.";
+    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again.";
     return;
   }
 
@@ -142,7 +120,7 @@ async function handleRegister() {
 
   const client = getSupabaseClient();
   if (!client) {
-    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again in a second.";
+    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again.";
     return;
   }
 
