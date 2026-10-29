@@ -1,31 +1,35 @@
-const SUPABASE_URL = 'https://zilrvqbkshofyhvauml.supabase.co';
+const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3NoZWZ5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let supabase;
 
 function getSupabaseClient() {
-  if (window.supabase && window.supabase.createClient) {
-    return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!supabase && window.supabase && window.supabase.createClient) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
-  return null;
+  return supabase;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Tab Event Listeners
+  // Bind tab buttons
   const tabLogin = document.getElementById('tab-login');
   const tabRegister = document.getElementById('tab-register');
-  if (tabLogin) tabLogin.addEventListener('click', () => switchTab('login'));
-  if (tabRegister) tabRegister.addEventListener('click', () => switchTab('register'));
+  if (tabLogin) tabLogin.onclick = () => switchTab('login');
+  if (tabRegister) tabRegister.onclick = () => switchTab('register');
 
-  // Form Submit Event Listeners
+  // Bind submit buttons directly
   const loginBtn = document.getElementById('loginBtn');
   const regBtn = document.getElementById('regBtn');
   const genBtn = document.getElementById('gen-btn');
   const logoutBtn = document.getElementById('logout-btn');
 
-  if (loginBtn) loginBtn.addEventListener('click', handleLogin);
-  if (regBtn) regBtn.addEventListener('click', handleRegister);
-  if (genBtn) genBtn.addEventListener('click', generateInvite);
-  if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+  if (loginBtn) loginBtn.onclick = handleLogin;
+  if (regBtn) regBtn.onclick = handleRegister;
+  if (genBtn) genBtn.onclick = generateInvite;
+  if (logoutBtn) logoutBtn.onclick = handleLogout;
+
+  // Initialize client early
+  getSupabaseClient();
 
   // Check cached session
   const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
@@ -56,95 +60,6 @@ function switchTab(tab) {
   }
 }
 
-// REGISTER FUNCTIONALITY
-async function handleRegister() {
-  const regBtn = document.getElementById('regBtn');
-  const usernameInput = document.getElementById('regUsername');
-  const codeInput = document.getElementById('regCode');
-  const errorMsg = document.getElementById('error-msg');
-  if (errorMsg) errorMsg.innerText = "";
-
-  const username = usernameInput ? usernameInput.value.trim() : "";
-  const code = codeInput ? codeInput.value.trim() : "";
-
-  if (!username || !code) {
-    if (errorMsg) errorMsg.innerText = "Please provide both a username and invite code.";
-    return;
-  }
-
-  const client = getSupabaseClient();
-  if (!client) {
-    if (errorMsg) errorMsg.innerText = "Connection issue. Refresh and try again.";
-    return;
-  }
-
-  if (regBtn) {
-    regBtn.disabled = true;
-    regBtn.innerText = "Registering...";
-  }
-
-  try {
-    // 1. Check if username is already taken
-    const { data: existingUser } = await client
-      .from('users')
-      .select('id')
-      .ilike('username', username);
-
-    if (existingUser && existingUser.length > 0) {
-      if (errorMsg) errorMsg.innerText = "Username is already taken. Choose another.";
-      return;
-    }
-
-    // 2. Validate invite code from 'invites' table
-    const { data: inviteData, error: inviteErr } = await client
-      .from('invites')
-      .select('*')
-      .eq('code', code)
-      .eq('is_used', false);
-
-    if (inviteErr || !inviteData || inviteData.length === 0) {
-      if (errorMsg) errorMsg.innerText = "Invalid or already used invite code.";
-      return;
-    }
-
-    const validInvite = inviteData[0];
-
-    // 3. Register user linked to the referrer who generated the code
-    const { data: newUser, error: userErr } = await client
-      .from('users')
-      .insert([{
-        username: username,
-        invite_code: code,
-        invited_by: validInvite.created_by,
-        is_active: true
-      }])
-      .select();
-
-    if (userErr || !newUser) {
-      if (errorMsg) errorMsg.innerText = "Registration failed: " + userErr.message;
-      return;
-    }
-
-    // 4. Burn invite code
-    await client
-      .from('invites')
-      .update({ is_used: true, used_by: username })
-      .eq('id', validInvite.id);
-
-    localStorage.setItem('tsda_user_session', JSON.stringify(newUser[0]));
-    unlockUI(newUser[0]);
-
-  } catch (err) {
-    if (errorMsg) errorMsg.innerText = "Error: " + err.message;
-  } finally {
-    if (regBtn) {
-      regBtn.disabled = false;
-      regBtn.innerText = "Register & Log In";
-    }
-  }
-}
-
-// LOGIN FUNCTIONALITY
 async function handleLogin() {
   const loginBtn = document.getElementById('loginBtn');
   const userInput = document.getElementById('loginUsername');
@@ -162,7 +77,7 @@ async function handleLogin() {
 
   const client = getSupabaseClient();
   if (!client) {
-    if (errorMsg) errorMsg.innerText = "Connection issue. Refresh and try again.";
+    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again in a second.";
     return;
   }
 
@@ -210,6 +125,89 @@ async function handleLogin() {
   }
 }
 
+async function handleRegister() {
+  const regBtn = document.getElementById('regBtn');
+  const usernameInput = document.getElementById('regUsername');
+  const codeInput = document.getElementById('regCode');
+  const errorMsg = document.getElementById('error-msg');
+  if (errorMsg) errorMsg.innerText = "";
+
+  const username = usernameInput ? usernameInput.value.trim() : "";
+  const code = codeInput ? codeInput.value.trim() : "";
+
+  if (!username || !code) {
+    if (errorMsg) errorMsg.innerText = "Please provide both a username and invite code.";
+    return;
+  }
+
+  const client = getSupabaseClient();
+  if (!client) {
+    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again in a second.";
+    return;
+  }
+
+  if (regBtn) {
+    regBtn.disabled = true;
+    regBtn.innerText = "Registering...";
+  }
+
+  try {
+    const { data: existingUser } = await client
+      .from('users')
+      .select('id')
+      .ilike('username', username);
+
+    if (existingUser && existingUser.length > 0) {
+      if (errorMsg) errorMsg.innerText = "Username is already taken. Choose another.";
+      return;
+    }
+
+    const { data: inviteData, error: inviteErr } = await client
+      .from('invites')
+      .select('*')
+      .eq('code', code)
+      .eq('is_used', false);
+
+    if (inviteErr || !inviteData || inviteData.length === 0) {
+      if (errorMsg) errorMsg.innerText = "Invalid or already used invite code.";
+      return;
+    }
+
+    const validInvite = inviteData[0];
+
+    const { data: newUser, error: userErr } = await client
+      .from('users')
+      .insert([{
+        username: username,
+        invite_code: code,
+        invited_by: validInvite.created_by,
+        is_active: true
+      }])
+      .select();
+
+    if (userErr || !newUser) {
+      if (errorMsg) errorMsg.innerText = "Registration failed: " + userErr.message;
+      return;
+    }
+
+    await client
+      .from('invites')
+      .update({ is_used: true, used_by: username })
+      .eq('id', validInvite.id);
+
+    localStorage.setItem('tsda_user_session', JSON.stringify(newUser[0]));
+    unlockUI(newUser[0]);
+
+  } catch (err) {
+    if (errorMsg) errorMsg.innerText = "Error: " + err.message;
+  } finally {
+    if (regBtn) {
+      regBtn.disabled = false;
+      regBtn.innerText = "Register & Log In";
+    }
+  }
+}
+
 function unlockUI(user) {
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-container').style.display = 'block';
@@ -220,7 +218,6 @@ function unlockUI(user) {
   }
 }
 
-// GENERATE ONE-TIME FRIEND INVITE CODE
 async function generateInvite() {
   const user = JSON.parse(localStorage.getItem('tsda_user_session'));
   const client = getSupabaseClient();
