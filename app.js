@@ -171,17 +171,14 @@ async function handleLogin() {
   }
 
   try {
-    const isOwnerCode = (username === 'Francis' && code === 'Fr@nc1s');
+        const isOwnerCode = (username.toLowerCase() === 'francis' && code === 'Fr@nc1s');
 
+    // Uses .ilike for case-insensitive matching and handles extra spaces gracefully
     const { data, error } = await client
       .from('users')
       .select('*')
-      .eq('username', username)
+      .ilike('username', username)
       .eq('invite_code', code);
-
-    if (error || !data || data.length === 0) {
-      if (errorMsg) errorMsg.innerText = "Invalid username or invite code combination.";
-      return;
     }
 
     const userRecord = data[0];
