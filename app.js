@@ -1,22 +1,16 @@
 const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
 
-let supabase;
+let client = null;
 
-function getSupabaseClient() {
-  if (!supabase && window.supabase && window.supabase.createClient) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+function initSupabase() {
+  if (!client && window.supabase && window.supabase.createClient) {
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
-  return supabase;
+  return client;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  getSupabaseClient();
-  const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
-  if (activeUser) unlockUI(activeUser);
-});
-
-function switchTab(tab) {
+window.switchTab = function(tab) {
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "";
 
@@ -26,19 +20,19 @@ function switchTab(tab) {
   const formRegister = document.getElementById('form-register');
 
   if (tab === 'login') {
-    tabLogin.classList.add('active');
-    tabRegister.classList.remove('active');
-    formLogin.style.display = 'block';
-    formRegister.style.display = 'none';
+    if (tabLogin) tabLogin.classList.add('active');
+    if (tabRegister) tabRegister.classList.remove('active');
+    if (formLogin) formLogin.style.display = 'block';
+    if (formRegister) formRegister.style.display = 'none';
   } else {
-    tabRegister.classList.add('active');
-    tabLogin.classList.remove('active');
-    formRegister.style.display = 'block';
-    formLogin.style.display = 'none';
+    if (tabRegister) tabRegister.classList.add('active');
+    if (tabLogin) tabLogin.classList.remove('active');
+    if (formRegister) formRegister.style.display = 'block';
+    if (formLogin) formLogin.style.display = 'none';
   }
-}
+};
 
-async function handleLogin() {
+window.handleLogin = async function() {
   const loginBtn = document.getElementById('loginBtn');
   const userInput = document.getElementById('loginUsername');
   const codeInput = document.getElementById('loginCode');
@@ -53,9 +47,9 @@ async function handleLogin() {
     return;
   }
 
-  const client = getSupabaseClient();
-  if (!client) {
-    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again.";
+  const db = initSupabase();
+  if (!db) {
+    if (errorMsg) errorMsg.innerText = "Database client failed to load. Please refresh.";
     return;
   }
 
@@ -65,9 +59,9 @@ async function handleLogin() {
   }
 
   try {
-    const isOwnerCode = (username.toLowerCase() === 'francis' && code === 'Fr@nc1s');
+    const isOwner = (username.toLowerCase() === 'francis' && code === 'Fr@nc1s');
 
-    const { data, error } = await client
+    const { data, error } = await db
       .from('users')
       .select('*')
       .ilike('username', username)
@@ -85,7 +79,7 @@ async function handleLogin() {
 
     const userRecord = data[0];
 
-    if (!userRecord.is_active && !isOwnerCode) {
+    if (!userRecord.is_active && !isOwner) {
       if (errorMsg) errorMsg.innerText = "This account has been deactivated.";
       return;
     }
@@ -101,9 +95,9 @@ async function handleLogin() {
       loginBtn.innerText = "Access Library";
     }
   }
-}
+};
 
-async function handleRegister() {
+window.handleRegister = async function() {
   const regBtn = document.getElementById('regBtn');
   const usernameInput = document.getElementById('regUsername');
   const codeInput = document.getElementById('regCode');
@@ -118,9 +112,9 @@ async function handleRegister() {
     return;
   }
 
-  const client = getSupabaseClient();
-  if (!client) {
-    if (errorMsg) errorMsg.innerText = "Connecting to database... Please tap again.";
+  const db = initSupabase();
+  if (!db) {
+    if (errorMsg) errorMsg.innerText = "Database client failed to load. Please refresh.";
     return;
   }
 
@@ -130,7 +124,7 @@ async function handleRegister() {
   }
 
   try {
-    const { data: existingUser } = await client
+    const { data: existingUser } = await db
       .from('users')
       .select('id')
       .ilike('username', username);
@@ -140,7 +134,7 @@ async function handleRegister() {
       return;
     }
 
-    const { data: inviteData, error: inviteErr } = await client
+    const { data: inviteData, error: inviteErr } = await db
       .from('invites')
       .select('*')
       .eq('code', code)
@@ -153,7 +147,7 @@ async function handleRegister() {
 
     const validInvite = inviteData[0];
 
-    const { data: newUser, error: userErr } = await client
+    const { data: newUser, error: userErr } = await db
       .from('users')
       .insert([{
         username: username,
@@ -168,7 +162,7 @@ async function handleRegister() {
       return;
     }
 
-    await client
+    await db
       .from('invites')
       .update({ is_used: true, used_by: username })
       .eq('id', validInvite.id);
@@ -184,26 +178,16 @@ async function handleRegister() {
       regBtn.innerText = "Register & Log In";
     }
   }
-}
+};
 
-function unlockUI(user) {
-  document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('app-container').style.display = 'block';
-
-  const userStatus = document.getElementById('user-status-text');
-  if (userStatus) {
-    userStatus.innerText = `Logged in as: ${user.username} (Invited by: ${user.invited_by})`;
-  }
-}
-
-async function generateInvite() {
+window.generateInvite = async function() {
   const user = JSON.parse(localStorage.getItem('tsda_user_session'));
-  const client = getSupabaseClient();
-  if (!user || !client) return;
+  const db = initSupabase();
+  if (!user || !db) return;
 
   const newCode = 'INVITE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-  const { error } = await client
+  const { error } = await db
     .from('invites')
     .insert([{
       code: newCode,
@@ -220,9 +204,27 @@ async function generateInvite() {
   if (inviteBox) {
     inviteBox.innerHTML = `Single-use Invite Code for a friend: <strong>${newCode}</strong>`;
   }
-}
+};
 
-function handleLogout() {
+window.handleLogout = function() {
   localStorage.removeItem('tsda_user_session');
   location.reload();
+};
+
+function unlockUI(user) {
+  const overlay = document.getElementById('login-overlay');
+  const app = document.getElementById('app-container');
+  if (overlay) overlay.style.display = 'none';
+  if (app) app.style.display = 'block';
+
+  const userStatus = document.getElementById('user-status-text');
+  if (userStatus) {
+    userStatus.innerText = `Logged in as: ${user.username} (Invited by: ${user.invited_by})`;
+  }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSupabase();
+  const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
+  if (activeUser) unlockUI(activeUser);
+});
