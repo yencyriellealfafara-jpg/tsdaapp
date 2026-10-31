@@ -156,6 +156,15 @@
         opacity: 0.75;
       }
     </style>
+    <script>
+      (function verifyAccess() {
+        const activeUser = localStorage.getItem("tsda_user_session");
+        if (!activeUser) {
+          alert("Access denied. Please log in first.");
+          window.location.href = "../index.html";
+        }
+      })();
+    </script>
   </head>
   <body>
     <h1>
