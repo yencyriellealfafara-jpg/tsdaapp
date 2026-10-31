@@ -1676,25 +1676,25 @@
           xc: 455.85,
           rows: [
             [
-                [306.6, 342.6],
-                [343.1, 379.1],
-                [379.5, 415.6],
-                [416.0, 452.0],
-                [452.5, 488.5],
-                [489.0, 525.0],
-                [525.5, 561.5],
-                [562.0, 598.0],
-                [598.5, 634.7],
-                [635.2, 671.2],
-                [671.7, 707.7],
-                [708.2, 744.2],
-              ],
+              [306.6, 342.6],
+              [343.1, 379.1],
+              [379.5, 415.6],
+              [416.0, 452.0],
+              [452.5, 488.5],
+              [489.0, 525.0],
+              [525.5, 561.5],
+              [562.0, 598.0],
+              [598.5, 634.7],
+              [635.2, 671.2],
+              [671.7, 707.7],
+              [708.2, 744.2],
+            ],
             [
-                [84.0, 120.0],
-                [120.5, 156.5],
-                [157.0, 193.0],
-                [193.5, 229.5],
-              ],
+              [84.0, 120.0],
+              [120.5, 156.5],
+              [157.0, 193.0],
+              [193.5, 229.5],
+            ],
           ],
           ref: null,
           lab: [
@@ -1712,7 +1712,11 @@
               c = X.c;
             (D.rows[k] || []).forEach(([a, b]) => cc(d, D.xc, (a + b) / 2));
             if (D.ref) {
-              const ry = D.ref.ys ? D.ref.ys[k] : D.ref.page == k ? D.ref.y : null;
+              const ry = D.ref.ys
+                ? D.ref.ys[k]
+                : D.ref.page == k
+                  ? D.ref.y
+                  : null;
               if (ry != null) refDraw(d, S, X.i, D.ref.xs, ry, 11.5);
             }
             D.lab
@@ -1731,24 +1735,24 @@
             [
               "Obtain and convey workplace information",
               "Complete relevant work-related document",
-              "Participate in workplace meeting and discussion"
+              "Participate in workplace meeting and discussion",
             ],
-            "BASIC COMPETENCIES"
+            "BASIC COMPETENCIES",
           ],
           [
             "2. Work in a team environment",
             [
               "Describe and identify team role and responsibility",
-              "Describe work as a team member"
-            ]
+              "Describe work as a team member",
+            ],
           ],
           [
             "3. Practice career professionalism",
             [
               "Integrate personal objectives with organizational goals",
               "Set and meet work priorities",
-              "Maintain professional growth and development"
-            ]
+              "Maintain professional growth and development",
+            ],
           ],
           [
             "4. Practice occupational health and safety procedures",
@@ -1756,17 +1760,17 @@
               "Identify hazards and risks",
               "Evaluate hazards and risks",
               "Control hazards and risks",
-              "Maintain occupational health and safety awareness"
-            ]
+              "Maintain occupational health and safety awareness",
+            ],
           ],
           [
             "1. Apply quality standards",
             [
               "Assess quality of received materials",
               "Assess own work",
-              "Engage in quality improvement"
+              "Engage in quality improvement",
             ],
-            "COMMON COMPETENCIES"
+            "COMMON COMPETENCIES",
           ],
           [
             "2. Perform computer operations",
@@ -1776,24 +1780,24 @@
               "Access information using computer",
               "Produce output/data using computer system",
               "Use basic functions of a web browser to locate information",
-              "Maintain computer equipment and systems"
-            ]
+              "Maintain computer equipment and systems",
+            ],
           ],
           [
             "3. Perform mensuration and calculation",
             [
               "Select measuring instruments",
               "Carry out measurements and calculation",
-              "Maintain measuring instruments"
-            ]
+              "Maintain measuring instruments",
+            ],
           ],
           [
             "4. Prepare and interpret technical drawing",
             [
               "Identify different kinds of technical drawings",
               "Interpret technical drawing",
-              "Prepare/make changes on electrical/electronic schematics and drawings"
-            ]
+              "Prepare/make changes on electrical/electronic schematics and drawings",
+            ],
           ],
           [
             "5. Use hand tools",
@@ -1801,25 +1805,25 @@
               "Plan and prepare for tasks to be undertaken",
               "Prepare hand tools",
               "Use appropriate hand tools and test equipment",
-              "Maintain hand tools"
-            ]
+              "Maintain hand tools",
+            ],
           ],
           [
             "6. Terminate and connect electrical wiring and electronics circuit",
             [
               "Plan and prepare for termination/connection of electrical wiring/electronics circuits",
               "Terminate/connect wiring/electronic circuits",
-              "Test termination/connections of electrical wiring/electronics circuits"
-            ]
+              "Test termination/connections of electrical wiring/electronics circuits",
+            ],
           ],
           [
             "1. Install computer systems and networks",
             [
               "Plan and prepare for installation",
               "Install equipment/device system",
-              "Conduct test"
+              "Conduct test",
             ],
-            "CORE COMPETENCIES"
+            "CORE COMPETENCIES",
           ],
           [
             "2. Diagnose and troubleshoot computer systems",
@@ -1827,16 +1831,16 @@
               "Plan and prepare for diagnosis of faults of computer systems",
               "Diagnose faults of computer systems",
               "Repair defects in computer systems and networks",
-              "Test systems and networks"
-            ]
+              "Test systems and networks",
+            ],
           ],
           [
             "3. Configure computer systems and networks",
             [
               "Plan and prepare for configuration",
               "Configure computer systems and networks",
-              "Inspect and test configured computer systems and networks"
-            ]
+              "Inspect and test configured computer systems and networks",
+            ],
           ],
           [
             "4. Maintain computer systems and networks",
@@ -1844,9 +1848,9 @@
               "Plan and prepare for the maintenance of computer systems and networks",
               "Maintain computer systems",
               "Maintain network systems",
-              "Inspect and test configured/repaired computer system and networks"
-            ]
-          ]
+              "Inspect and test configured/repaired computer system and networks",
+            ],
+          ],
         ];
         function chkGen(G, X) {
           const { PL, out, FB, FT, FTB } = G,
@@ -1908,7 +1912,12 @@
           };
           tx("Assessor’s Observation Checklist", L, 66, 22, FB, blue);
           ln(L, 76, L + TW, 0.8, blue);
-          tx("Qualification: " + (S.qual || "Computer Hardware Servicing NC II"), L, 106, 11.5);
+          tx(
+            "Qualification: " + (S.qual || "Computer Hardware Servicing NC II"),
+            L,
+            106,
+            11.5,
+          );
           [
             ["Candidate Name:", nm(c), 175, 134],
             ["Date:", fmt(S.assessDate), 130, 162],
