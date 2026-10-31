@@ -232,7 +232,7 @@
       window.TESDA_CFG = {
         custom: true,
         carsWrap: true,
-        extra: ["sag"],
+        extra: ["sag", "chk"],
         sagKey: "CHS2",
         U: [
           "Install computer systems and networks",
@@ -1724,6 +1724,300 @@
               });
           },
         };
+        /* Observation Checklist for the CHS NC II self-check competencies, same layout and colours as obsGen */
+        const CHK = [
+          [
+            "1. Participate in workplace communication",
+            [
+              "Obtain and convey workplace information",
+              "Complete relevant work-related document",
+              "Participate in workplace meeting and discussion"
+            ],
+            "BASIC COMPETENCIES"
+          ],
+          [
+            "2. Work in a team environment",
+            [
+              "Describe and identify team role and responsibility",
+              "Describe work as a team member"
+            ]
+          ],
+          [
+            "3. Practice career professionalism",
+            [
+              "Integrate personal objectives with organizational goals",
+              "Set and meet work priorities",
+              "Maintain professional growth and development"
+            ]
+          ],
+          [
+            "4. Practice occupational health and safety procedures",
+            [
+              "Identify hazards and risks",
+              "Evaluate hazards and risks",
+              "Control hazards and risks",
+              "Maintain occupational health and safety awareness"
+            ]
+          ],
+          [
+            "1. Apply quality standards",
+            [
+              "Assess quality of received materials",
+              "Assess own work",
+              "Engage in quality improvement"
+            ],
+            "COMMON COMPETENCIES"
+          ],
+          [
+            "2. Perform computer operations",
+            [
+              "Plan and prepare for tasks to be undertaken",
+              "Input data into computer",
+              "Access information using computer",
+              "Produce output/data using computer system",
+              "Use basic functions of a web browser to locate information",
+              "Maintain computer equipment and systems"
+            ]
+          ],
+          [
+            "3. Perform mensuration and calculation",
+            [
+              "Select measuring instruments",
+              "Carry out measurements and calculation",
+              "Maintain measuring instruments"
+            ]
+          ],
+          [
+            "4. Prepare and interpret technical drawing",
+            [
+              "Identify different kinds of technical drawings",
+              "Interpret technical drawing",
+              "Prepare/make changes on electrical/electronic schematics and drawings"
+            ]
+          ],
+          [
+            "5. Use hand tools",
+            [
+              "Plan and prepare for tasks to be undertaken",
+              "Prepare hand tools",
+              "Use appropriate hand tools and test equipment",
+              "Maintain hand tools"
+            ]
+          ],
+          [
+            "6. Terminate and connect electrical wiring and electronics circuit",
+            [
+              "Plan and prepare for termination/connection of electrical wiring/electronics circuits",
+              "Terminate/connect wiring/electronic circuits",
+              "Test termination/connections of electrical wiring/electronics circuits"
+            ]
+          ],
+          [
+            "1. Install computer systems and networks",
+            [
+              "Plan and prepare for installation",
+              "Install equipment/device system",
+              "Conduct test"
+            ],
+            "CORE COMPETENCIES"
+          ],
+          [
+            "2. Diagnose and troubleshoot computer systems",
+            [
+              "Plan and prepare for diagnosis of faults of computer systems",
+              "Diagnose faults of computer systems",
+              "Repair defects in computer systems and networks",
+              "Test systems and networks"
+            ]
+          ],
+          [
+            "3. Configure computer systems and networks",
+            [
+              "Plan and prepare for configuration",
+              "Configure computer systems and networks",
+              "Inspect and test configured computer systems and networks"
+            ]
+          ],
+          [
+            "4. Maintain computer systems and networks",
+            [
+              "Plan and prepare for the maintenance of computer systems and networks",
+              "Maintain computer systems",
+              "Maintain network systems",
+              "Inspect and test configured/repaired computer system and networks"
+            ]
+          ]
+        ];
+        function chkGen(G, X) {
+          const { PL, out, FB, FT, FTB } = G,
+            { rgb } = PL,
+            S = X.S,
+            c = X.c,
+            blue = rgb(0.31, 0.5, 0.74),
+            blk = rgb(0, 0, 0),
+            W = 595,
+            Hh = 842,
+            L = 54,
+            TW = 487,
+            CW = [162, 163, 162];
+          let pg = out.addPage([W, Hh]),
+            y = 0;
+          const tx = (s, x, yy, sz, f, col) =>
+              pg.drawText(String(s), {
+                x,
+                y: Hh - yy,
+                size: sz,
+                font: f || FT,
+                color: col || blk,
+              }),
+            wd = (s, sz, f) => (f || FT).widthOfTextAtSize(s, sz);
+          const ln = (x0, yy, x1, th = 0.7, col) =>
+              pg.drawLine({
+                start: { x: x0, y: Hh - yy },
+                end: { x: x1, y: Hh - yy },
+                thickness: th,
+                color: col || blk,
+              }),
+            vl = (x, y0, y1, th = 0.7) =>
+              pg.drawLine({
+                start: { x, y: Hh - y0 },
+                end: { x, y: Hh - y1 },
+                thickness: th,
+                color: blk,
+              });
+          const ck = (cx, cy) => {
+              ln2(cx - 4.2, cy + 0.5, cx - 1.4, cy + 4.2, 1.3);
+              ln2(cx - 1.4, cy + 4.2, cx + 4.6, cy - 4.4, 1.3);
+            },
+            ln2 = (a, b, c2, d2, th) =>
+              pg.drawLine({
+                start: { x: a, y: Hh - b },
+                end: { x: c2, y: Hh - d2 },
+                thickness: th,
+                color: blk,
+              }),
+            xx = (cx, cy) => {
+              ln2(cx - 3, cy - 3, cx + 3, cy + 3, 1);
+              ln2(cx - 3, cy + 3, cx + 3, cy - 3, 1);
+            };
+          const need = (h) => {
+            if (y + h > 792) {
+              pg = out.addPage([W, Hh]);
+              y = 54;
+            }
+          };
+          tx("Assessor’s Observation Checklist", L, 66, 22, FB, blue);
+          ln(L, 76, L + TW, 0.8, blue);
+          tx("Qualification: " + (S.qual || "Computer Hardware Servicing NC II"), L, 106, 11.5);
+          [
+            ["Candidate Name:", nm(c), 175, 134],
+            ["Date:", fmt(S.assessDate), 130, 162],
+            ["Assessment Center:", S.ac, 155, 190],
+            ["Assessor Name:", S.assessor, 165, 218],
+          ].forEach(([l, v, w, yy]) => {
+            tx(l, L, yy, 11.5);
+            const x0 = L + wd(l, 11.5) + 5;
+            ln(x0, yy + 1.5, x0 + w);
+            tx(v, x0 + 3, yy - 1.5, 10, FT);
+          });
+          tx("Instructions:", L, 258, 12.5, FB, blue);
+          tx("- Tick (", L, 276, 10.5);
+          let w1 = wd("- Tick (", 10.5);
+          ck(L + w1 + 5, 274);
+          tx(
+            ") if the candidate successfully performed the task according to the standard.",
+            L + w1 + 11,
+            276,
+            10.5,
+          );
+          tx("- Leave blank or put (", L, 290, 10.5);
+          w1 = wd("- Leave blank or put (", 10.5);
+          xx(L + w1 + 4, 288);
+          tx(") if not performed or incorrect.", L + w1 + 9, 290, 10.5);
+          tx("- Add remarks if necessary.", L, 304, 10.5);
+          y = 326;
+          CHK.forEach(([h, items, cat]) => {
+            const rows = items.map((t) => {
+                const ls = G.wrap(t, 10.3, CW[0] - 9);
+                return { ls, h: Math.max(16, ls.length * 12 + 5) };
+              }),
+              th = 16 + rows.reduce((a, r) => a + r.h, 0);
+            need(th + 34 + (cat ? 28 : 0));
+            if (cat) {
+              tx(cat, L + 2, y + 13, 13.5, FB, blue);
+              ln(L, y + 19, L + TW, 0.8, blue);
+              y += 28;
+            }
+            tx(h, L + 2, y + 11, 12, FB, blue);
+            y += 18;
+            const y0 = y;
+            tx("PERFORMANCE CRITERIA", L + 4, y + 11.5, 10);
+            ck(L + CW[0] + 10, y + 8.5);
+            tx("/", L + CW[0] + 17, y + 11.5, 10);
+            xx(L + CW[0] + 28, y + 8);
+            tx("REMARKS", L + CW[0] + CW[1] + 5, y + 11.5, 10);
+            y += 16;
+            ln(L, y, L + TW, 0.9);
+            rows.forEach((r) => {
+              r.ls.forEach((l, k) => tx(l, L + 4, y + 11 + k * 12, 10.3));
+              ck(L + CW[0] + CW[1] / 2, y + r.h / 2);
+              y += r.h;
+              ln(L, y, L + TW, 0.9);
+            });
+            ln(L, y0, L + TW, 0.9);
+            [0, CW[0], CW[0] + CW[1], TW].forEach((v) => vl(L + v, y0, y, 0.9));
+            y += 22;
+          });
+          need(190);
+          tx("Assessment Results", L + 2, y + 11, 12, FB, blue);
+          y += 18;
+          const y1 = y,
+            H2 = [121.5, 365.5].length && 243.5;
+          tx("CRITERIA", L + 4, y + 11.5, 10);
+          tx("RESULT", L + H2 + 5, y + 11.5, 10);
+          y += 16;
+          ln(L, y, L + TW, 0.9);
+          tx("All tasks performed correctly", L + 4, y + 11.5, 10.3);
+          tx("[", L + H2 + 5, y + 11.5, 10.3);
+          tx("X", L + H2 + 9.5, y + 11.5, 10.3, FTB);
+          tx("] COMPETENT (C)", L + H2 + 17, y + 11.5, 10.3);
+          y += 16;
+          ln(L, y, L + TW, 0.9);
+          tx("One or more tasks not performed or", L + 4, y + 11.5, 10.3);
+          tx("incorrect", L + 4, y + 23.5, 10.3);
+          tx("[ ] NOT YET COMPETENT (NYC)", L + H2 + 5, y + 11.5, 10.3);
+          y += 28;
+          ln(L, y, L + TW, 0.9);
+          ln(L, y1, L + TW, 0.9);
+          [0, H2, TW].forEach((v) => vl(L + v, y1, y, 0.9));
+          y += 24;
+          tx("Assessor’s Comments:", L + 2, y, 10.5);
+          y += 26;
+          [0, 1, 2].forEach((n) => {
+            ln(L + 2, y + n * 26, L + 332, 0.7);
+          });
+          tx(
+            "The candidate successfully performed all tasks according to the standard.",
+            L + 5,
+            y - 3,
+            9.5,
+          );
+          y += 92;
+          tx("Assessor’s Signature:", L + 2, y, 10.5);
+          ln(
+            L + 2 + wd("Assessor’s Signature:", 10.5) + 4,
+            y + 1.5,
+            L + 2 + wd("Assessor’s Signature:", 10.5) + 110,
+          );
+          y += 26;
+          tx("Candidate’s Signature:", L + 2, y, 10.5);
+          ln(
+            L + 2 + wd("Candidate’s Signature:", 10.5) + 4,
+            y + 1.5,
+            L + 2 + wd("Candidate’s Signature:", 10.5) + 110,
+          );
+        }
+        SPEC.chk = { gen: chkGen };
         const GMK = [5, 6, 4, 6, 6, 4, 4, 6, 4];
         SPEC.gobs = {
           tpl: "gobs",
@@ -2180,6 +2474,7 @@
       const COPIES = {
         app: 10,
         sag: 10,
+        chk: 10,
         pe: 10,
         cars: 10,
         caa: 10,
@@ -2210,6 +2505,12 @@
           docs.splice(1, 0, {
             id: "sag",
             n: "SAG (Self-Assessment Guide)",
+            per: 1,
+          });
+        if (EX.includes("chk"))
+          docs.splice(docs.findIndex((x) => x.id == "sag") + 1 || 1, 0, {
+            id: "chk",
+            n: "Observation Checklist (Self-Check)",
             per: 1,
           });
         if (EX.includes("gobs"))
