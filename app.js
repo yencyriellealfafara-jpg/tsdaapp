@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://zlilrvqbkshefyhvauml.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3NoZWZ5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsaWxydnFia3Nob2Z5aHZhdW1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxMjkzNTcsImV4cCI6MjEwODcwNTM1N30.Yrgfoh9c-rjeqRlzOdcEkSLKFYSRtWEtPBMxzOje2dU';
 
 let client = null;
 
@@ -220,6 +220,55 @@ function unlockUI(user) {
   const userStatus = document.getElementById('user-status-text');
   if (userStatus) {
     userStatus.innerText = `Logged in as: ${user.username} (Invited by: ${user.invited_by})`;
+  }
+
+  // Inject content strictly after authentication
+  const gridContainer = document.getElementById('folder-grid-container');
+  if (gridContainer) {
+    gridContainer.innerHTML = `
+      <nav class="folder-grid" aria-label="TESDA form folders">
+        <a class="folder-card" href="tesda-computer-hardware-nc2-forms/tesda-computer-hardware-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Computer Hardware Servicing NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-2d-game-art-nc3-forms/tesda-2d-game-art-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">2D Game Art NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-animation-nc2-forms/tesda-animation-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Animation NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-cac-nc3-forms/tesda-cac-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CAC NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-css-nc2-forms%20(2)/tesda-css-nc2-forms%20(2).html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CSS NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-electronics-backend-nc2-forms/tesda-electronics-backend-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Electronics Backend NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-game-programming-nc3-forms/tesda-game-programming-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Game Programming NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-vgd-nc3-forms/tesda-vgd-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Visual Graphic Design NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+      </nav>
+    `;
   }
 }
 
