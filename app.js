@@ -10,7 +10,10 @@ function initSupabase() {
   return client;
 }
 
+// 1. DEFINE unlockUI FIRST so it is available immediately when the page loads
 window.unlockUI = function(user) {
+  if (!user) return;
+
   const overlay = document.getElementById('login-overlay');
   const app = document.getElementById('app-container');
   if (overlay) overlay.style.display = 'none';
@@ -18,7 +21,8 @@ window.unlockUI = function(user) {
 
   const userStatus = document.getElementById('user-status-text');
   if (userStatus) {
-    userStatus.innerText = `Logged in as: ${user.username} (Invited by: ${user.invited_by})`;
+    const invitedByText = user.invited_by ? ` (Invited by: ${user.invited_by})` : '';
+    userStatus.innerText = `Logged in as: ${user.username}${invitedByText}`;
   }
 
   // Inject content strictly after authentication
@@ -145,6 +149,7 @@ window.handleLogin = async function() {
       return;
     }
 
+    // Save user session to LocalStorage
     localStorage.setItem('tsda_user_session', JSON.stringify(userRecord));
     window.unlockUI(userRecord);
 
@@ -272,10 +277,19 @@ window.handleLogout = function() {
   location.reload();
 };
 
+// 2. RUN SESSION CHECK ON DOMContentLoaded WITH TRY-CATCH SAFEGUARD
 document.addEventListener('DOMContentLoaded', () => {
   initSupabase();
-  const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
-  if (activeUser) {
-    window.unlockUI(activeUser);
+  
+  try {
+    const rawSession = localStorage.getItem('tsda_user_session');
+    if (rawSession) {
+      const activeUser = JSON.parse(rawSession);
+      if (activeUser && activeUser.username) {
+        window.unlockUI(activeUser);
+      }
+    }
+  } catch (e) {
+    console.error("Session restoration error:", e);
   }
 });
