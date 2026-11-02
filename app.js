@@ -10,6 +10,67 @@ function initSupabase() {
   return client;
 }
 
+window.unlockUI = function(user) {
+  const overlay = document.getElementById('login-overlay');
+  const app = document.getElementById('app-container');
+  if (overlay) overlay.style.display = 'none';
+  if (app) app.style.display = 'block';
+
+  const userStatus = document.getElementById('user-status-text');
+  if (userStatus) {
+    userStatus.innerText = `Logged in as: ${user.username} (Invited by: ${user.invited_by})`;
+  }
+
+  // Inject content strictly after authentication
+  const gridContainer = document.getElementById('folder-grid-container');
+  if (gridContainer) {
+    gridContainer.innerHTML = `
+      <nav class="folder-grid" aria-label="TESDA form folders">
+        <a class="folder-card" href="tesda-computer-hardware-nc2-forms/tesda-computer-hardware-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Computer Hardware Servicing NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-2d-game-art-nc3-forms/tesda-2d-game-art-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">2D Game Art NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-animation-nc2-forms/tesda-animation-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Animation NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-cac-nc3-forms/tesda-cac-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CAC NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-css-nc2-forms%20(2)/tesda-css-nc2-forms%20(2).html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">CSS NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-electronics-backend-nc2-forms/tesda-electronics-backend-nc2-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Electronics Backend NC II</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-game-programming-nc3-forms/tesda-game-programming-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Game Programming NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+        <a class="folder-card" href="tesda-vgd-nc3-forms/tesda-vgd-nc3-forms.html">
+          <span class="folder-icon" aria-hidden="true">📁</span>
+          <span class="folder-name">Visual Graphic Design NC III</span>
+          <span class="folder-action">Open forms →</span>
+        </a>
+      </nav>
+    `;
+  }
+};
+
 window.switchTab = function(tab) {
   const errorMsg = document.getElementById('error-msg');
   if (errorMsg) errorMsg.innerText = "";
@@ -85,7 +146,7 @@ window.handleLogin = async function() {
     }
 
     localStorage.setItem('tsda_user_session', JSON.stringify(userRecord));
-    unlockUI(userRecord);
+    window.unlockUI(userRecord);
 
   } catch (err) {
     if (errorMsg) errorMsg.innerText = "Error: " + err.message;
@@ -168,7 +229,7 @@ window.handleRegister = async function() {
       .eq('id', validInvite.id);
 
     localStorage.setItem('tsda_user_session', JSON.stringify(newUser[0]));
-    unlockUI(newUser[0]);
+    window.unlockUI(newUser[0]);
 
   } catch (err) {
     if (errorMsg) errorMsg.innerText = "Error: " + err.message;
@@ -211,69 +272,10 @@ window.handleLogout = function() {
   location.reload();
 };
 
-function unlockUI(user) {
-  const overlay = document.getElementById('login-overlay');
-  const app = document.getElementById('app-container');
-  if (overlay) overlay.style.display = 'none';
-  if (app) app.style.display = 'block';
-
-  const userStatus = document.getElementById('user-status-text');
-  if (userStatus) {
-    userStatus.innerText = `Logged in as: ${user.username} (Invited by: ${user.invited_by})`;
-  }
-
-  // Inject content strictly after authentication
-  const gridContainer = document.getElementById('folder-grid-container');
-  if (gridContainer) {
-    gridContainer.innerHTML = `
-      <nav class="folder-grid" aria-label="TESDA form folders">
-        <a class="folder-card" href="tesda-computer-hardware-nc2-forms/tesda-computer-hardware-nc2-forms.html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">Computer Hardware Servicing NC II</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-        <a class="folder-card" href="tesda-2d-game-art-nc3-forms/tesda-2d-game-art-nc3-forms.html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">2D Game Art NC III</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-        <a class="folder-card" href="tesda-animation-nc2-forms/tesda-animation-nc2-forms.html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">Animation NC II</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-        <a class="folder-card" href="tesda-cac-nc3-forms/tesda-cac-nc3-forms.html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">CAC NC III</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-        <a class="folder-card" href="tesda-css-nc2-forms%20(2)/tesda-css-nc2-forms%20(2).html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">CSS NC II</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-        <a class="folder-card" href="tesda-electronics-backend-nc2-forms/tesda-electronics-backend-nc2-forms.html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">Electronics Backend NC II</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-        <a class="folder-card" href="tesda-game-programming-nc3-forms/tesda-game-programming-nc3-forms.html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">Game Programming NC III</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-        <a class="folder-card" href="tesda-vgd-nc3-forms/tesda-vgd-nc3-forms.html">
-          <span class="folder-icon" aria-hidden="true">📁</span>
-          <span class="folder-name">Visual Graphic Design NC III</span>
-          <span class="folder-action">Open forms →</span>
-        </a>
-      </nav>
-    `;
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   initSupabase();
   const activeUser = JSON.parse(localStorage.getItem('tsda_user_session'));
-  if (activeUser) unlockUI(activeUser);
+  if (activeUser) {
+    window.unlockUI(activeUser);
+  }
 });
